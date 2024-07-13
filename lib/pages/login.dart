@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../features/validators/portal_validator.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -12,20 +13,21 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    const formKey = GlobalObjectKey<FormState>('FORM_KEY');
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Loginページ'),
-        backgroundColor: Colors.green,
-      ),
       body: Center(
         child: Container(
           padding: const EdgeInsets.all(30.0),
-          child: Column(
+          child: Form(
+            key: formKey,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
+                  validator: emailValidator,
                   decoration: const InputDecoration(
                   labelText: 'メールアドレスを入力してください',
                   ),
@@ -34,6 +36,7 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
+                  validator: passwordValidator,
                   obscureText: _isObscure,
                   decoration: InputDecoration(
                   labelText: 'Password',
@@ -50,7 +53,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Center(
                 child: ElevatedButton(
-                  onPressed: (){},
+                  onPressed: (){
+                    if (formKey.currentState!.validate()) {
+                    }
+                  },
                   child: Text('ログイン', style: TextStyle(color: Colors.black)),
                   style: ButtonStyle(
                     backgroundColor:
@@ -59,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
+          )
         ),
       ),
     );

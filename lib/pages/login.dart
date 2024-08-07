@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../features/validators/portal_validator.dart';
+import '../providers/api_client_providers.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../providers/flutter_secure_storage_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -14,6 +17,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     const formKey = GlobalObjectKey<FormState>('FORM_KEY');
+    const emailKey = GlobalObjectKey<FormFieldState>('EMAIL_KEY');
+    const passwordKey = GlobalObjectKey<FormFieldState>('PASSWORD_KEY');
 
     return Scaffold(
       body: Center(
@@ -27,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
+                  key: emailKey,
                   validator: emailValidator,
                   decoration: const InputDecoration(
                   labelText: 'メールアドレスを入力してください',
@@ -36,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
+                  key: passwordKey,
                   validator: passwordValidator,
                   obscureText: _isObscure,
                   decoration: InputDecoration(
@@ -53,14 +60,32 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Center(
                 child: ElevatedButton(
-                  onPressed: (){
+                  onPressed: () async{
                     if (formKey.currentState!.validate()) {
+                      var apiclient = ApiClient(baseUrl: dotenv.get('API_URL'), accesToken: '');
+                      var res = await apiclient.post(
+                        '/api/login',
+                        body: {
+                          'email': emailKey.currentState!.value,
+                          'password': passwordKey.currentState!.value,
+                        }
+                      );
+                      if (res.statusCode == 200) {
+                        print(res.body);
+                        var storageController = FlutterSecureStorageController();
+                        await storageController.setValue(key: 'accesToken', value: 'test');
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('ログインに失敗しました'))
+                        );
+                      }
                     }
                   },
-                  child: Text('ログイン', style: TextStyle(color: Colors.black)),
-                  style: ButtonStyle(
+                  style: const ButtonStyle(
                     backgroundColor:
-                        MaterialStatePropertyAll(Colors.greenAccent)),
+                        WidgetStatePropertyAll(Colors.greenAccent)
+                    ),
+                    child: const Text('ログイン', style: TextStyle(color: Colors.black)),
                 ),
               ),
             ],

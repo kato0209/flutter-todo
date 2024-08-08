@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '../features/validators/portal_validator.dart';
 import '../providers/api_client_providers.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../providers/flutter_secure_storage_provider.dart';
+import 'portal.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -71,9 +74,15 @@ class _LoginPageState extends State<LoginPage> {
                         }
                       );
                       if (res.statusCode == 200) {
-                        print(res.body);
+                        String jwtToken = json.decode(res.body)['jwtToken'];
                         var storageController = FlutterSecureStorageController();
-                        await storageController.setValue(key: 'accesToken', value: 'test');
+                        await storageController.setValue(key: 'jwtToken', value: jwtToken);
+                        // Widgetをリロードする
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) {
+                            return const PortalPage();
+                          }),
+                        );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('ログインに失敗しました'))

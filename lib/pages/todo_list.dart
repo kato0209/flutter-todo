@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../providers/flutter_secure_storage_provider.dart';
 import 'dart:convert';
 import '../models/todo.dart';
+import '../models/user.dart';
+import '../apis/fetch_login_user.dart';
 
 class ToDoListPage extends StatefulWidget {
   const ToDoListPage({super.key});
@@ -16,19 +18,28 @@ class ToDoListPage extends StatefulWidget {
 
 class _ToDoListPageState extends State<ToDoListPage> {
   List<Todo> todoList = [];
+  User? user;
 
   @override
   void initState() {
     super.initState();
-    fetchTodos();
+    fetchData();
   }
 
-  Future<void> fetchTodos() async {
+  void fetchData() async {
+    var user = await fetchLoginUser();
+    setState(() {
+      this.user = user;
+    });
+    await fetchTodos(user.id);
+  }
+
+  Future<void> fetchTodos(int userID) async {
     var storageController = FlutterSecureStorageController();
     String? jwtToken = await storageController.getValue(key: 'jwtToken');
     var apiclient = ApiClient(baseUrl: dotenv.get('API_URL'), accesToken: jwtToken!);
     var res = await apiclient.get(
-      '/api/todos',
+      '/api/todos?userID=$userID',
     );
     if (res.statusCode == 200) {
       List<dynamic> todos = json.decode(res.body);

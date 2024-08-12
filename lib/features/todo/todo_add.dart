@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../providers/api_client_providers.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../providers/flutter_secure_storage_provider.dart';
+import 'dart:convert';
+import '../../models/todo.dart';
 
 class ToDoAddPage extends StatefulWidget {
   const ToDoAddPage({super.key});
@@ -42,11 +47,34 @@ class _ToDoAddPageState extends State<ToDoAddPage> {
                 style: ButtonStyle(
                     backgroundColor:
                         MaterialStatePropertyAll(Colors.greenAccent)),
-                onPressed: () {
-                  Navigator.of(context).pop(_text);
+                onPressed: () async {
+                  var storageController = FlutterSecureStorageController();
+                  String? jwtToken = await storageController.getValue(key: 'jwtToken');
+                  var apiclient = ApiClient(baseUrl: dotenv.get('API_URL'), accesToken: jwtToken!);
+                  var res = await apiclient.post(
+                    '/api/todos',
+                    body: {
+                      'userID': 1,
+                      'content': _text,
+                    }
+                  );
+                  if (res.statusCode == 200) {
+                    var todoJson = json.decode(res.body);
+                    Todo todo = new Todo(
+                      id: todoJson['todoID'],
+                      userID: todoJson['userID'],
+                      content: todoJson['content'],
+                      createdAt: DateTime.parse(todoJson['createdAt']['date']),
+                    );
+                    Navigator.of(context).pop(todo);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('todo作成に失敗しました'))
+                    );
+                  }
                 },
                 child: Text(
-                  'リスト追加',
+                  'todoを追加',
                   style: TextStyle(color: Colors.black),
                 ),
               ),

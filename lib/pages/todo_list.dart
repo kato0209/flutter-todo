@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../features/todo/todo_item.dart';
 import '../features/todo/todo_add.dart';
+import '../providers/api_client_providers.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../providers/flutter_secure_storage_provider.dart';
+import 'dart:convert';
+import '../models/todo.dart';
 
 class ToDoListPage extends StatefulWidget {
   const ToDoListPage({super.key});
@@ -10,7 +15,38 @@ class ToDoListPage extends StatefulWidget {
 }
 
 class _ToDoListPageState extends State<ToDoListPage> {
-  List<String> toDoList = ["test"];
+  List<Todo> todoList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTodos();
+  }
+
+  Future<void> fetchTodos() async {
+    var storageController = FlutterSecureStorageController();
+    String? jwtToken = await storageController.getValue(key: 'jwtToken');
+    var apiclient = ApiClient(baseUrl: dotenv.get('API_URL'), accesToken: jwtToken!);
+    var res = await apiclient.get(
+      '/api/todos',
+    );
+    if (res.statusCode == 200) {
+      List<dynamic> todos = json.decode(res.body);
+      List<Todo> todoList = [];
+      for (var t in todos) {
+        Todo todo = new Todo(
+          id: t['todoID'],
+          userID: t['userID'],
+          content: t['content'],
+          createdAt: DateTime.parse(t['createdAt']['date']),
+        );
+        todoList.add(todo);
+      }
+      setState(() {
+        this.todoList = todoList;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,27 +56,27 @@ class _ToDoListPageState extends State<ToDoListPage> {
         title: Text('リスト一覧'),
       ),
       body: ListView.builder(
-        itemCount: toDoList.length,
+        itemCount: todoList.length,
         itemBuilder: (context, index) {
           return ToDoItem(
-              item: toDoList[index],
+              item: todoList[index],
               onDelete: () {
                 setState(() {
-                  toDoList.removeAt(index);
+                  todoList.removeAt(index);
                 });
               });
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final newListText = await Navigator.of(context).push(
+          Todo? todo = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) {
-              return ToDoAddPage();
+              return const ToDoAddPage();
             }),
           );
-          if (newListText != null) {
+          if (todo != null) {
             setState(() {
-              toDoList.add(newListText);
+              todoList.add(todo);
             });
           }
         },

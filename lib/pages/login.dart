@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_todo/pages/todo_list.dart';
 import '../features/validators/portal_validator.dart';
 import '../providers/api_client_providers.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -80,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                         // Widgetをリロードする
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (context) {
-                            return const PortalPage();
+                            return const ToDoListPage();
                           }),
                         );
                       } else {

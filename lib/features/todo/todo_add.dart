@@ -6,7 +6,8 @@ import 'dart:convert';
 import '../../models/todo.dart';
 
 class ToDoAddPage extends StatefulWidget {
-  const ToDoAddPage({super.key});
+  final int userID;
+  const ToDoAddPage({super.key, required this.userID});
 
   @override
   _ToDoAddPageState createState() => _ToDoAddPageState();
@@ -54,11 +55,11 @@ class _ToDoAddPageState extends State<ToDoAddPage> {
                   var res = await apiclient.post(
                     '/api/todos',
                     body: {
-                      'userID': 1,
+                      'userID': widget.userID,
                       'content': _text,
                     }
                   );
-                  if (res.statusCode == 200) {
+                  if (res.statusCode == 201) {
                     var todoJson = json.decode(res.body);
                     Todo todo = new Todo(
                       id: todoJson['todoID'],

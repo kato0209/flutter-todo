@@ -25,4 +25,10 @@ class ApiClient {
     return await http.post(url, headers: _headers(), body: jsonBody);
   }
 
+  Future<http.Response> delete(String endpoint, {Object? body}) async {
+    final url = Uri.parse('$baseUrl$endpoint');
+    var jsonBody = jsonEncode(body);
+    return await http.delete(url, headers: _headers(), body: jsonBody);
+  }
+
 }

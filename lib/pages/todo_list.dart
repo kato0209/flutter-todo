@@ -71,10 +71,22 @@ class _ToDoListPageState extends State<ToDoListPage> {
         itemBuilder: (context, index) {
           return ToDoItem(
               item: todoList[index],
-              onDelete: () {
-                setState(() {
-                  todoList.removeAt(index);
-                });
+              onDelete: () async {
+                var storageController = FlutterSecureStorageController();
+                String? jwtToken = await storageController.getValue(key: 'jwtToken');
+                var apiclient = ApiClient(baseUrl: dotenv.get('API_URL'), accesToken: jwtToken!);
+                var res = await apiclient.delete(
+                  '/api/todos/${todoList[index].id}',
+                );
+                if (res.statusCode == 204) {
+                  setState(() {
+                    todoList.removeAt(index);
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('削除に失敗しました')),
+                  );
+                }
               });
         },
       ),
@@ -82,7 +94,7 @@ class _ToDoListPageState extends State<ToDoListPage> {
         onPressed: () async {
           Todo? todo = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) {
-              return const ToDoAddPage();
+              return ToDoAddPage(userID: user!.id);
             }),
           );
           if (todo != null) {
